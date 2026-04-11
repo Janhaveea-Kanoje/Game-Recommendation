@@ -278,7 +278,7 @@ html, body, [class*="css"] {
     transition: filter 0.3s;
 }
 .img-hover-wrap:hover img {
-    filter: brightness(0.45);
+    filter: brightness(0.55);
 }
 .img-hover-overlay {
     position: absolute;
@@ -315,17 +315,6 @@ html, body, [class*="css"] {
     font-weight: 800;
     color: #3fb950;
     text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-}
-.img-hover-overlay .hov-cta {
-    margin-top: 4px;
-    background: linear-gradient(135deg, #1db954, #1f6feb);
-    color: white;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 5px 16px;
-    border-radius: 20px;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 12px rgba(29,185,84,0.4);
 }
 
 /* ── Detail page ── */
@@ -572,6 +561,63 @@ html, body, [class*="css"] {
     border-color: #1f6feb !important;
 }
 
+/* ── Genre navigator row ── */
+.genre-nav-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 18px;
+}
+.genre-nav-pills {
+    display: flex;
+    gap: 8px;
+    overflow: hidden;
+    flex: 1;
+}
+.genre-nav-pill {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    background: #161b22;
+    color: #8b949e;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+    user-select: none;
+}
+.genre-nav-pill:hover {
+    border-color: #58a6ff;
+    color: #e6edf3;
+    background: #1c2128;
+}
+.genre-nav-pill.active {
+    background: linear-gradient(135deg, #1db954, #1f6feb);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(29,185,84,0.3);
+}
+.genre-nav-arrow {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+    background: #161b22;
+    color: #8b949e;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    user-select: none;
+}
+.genre-nav-arrow:hover {
+    border-color: #58a6ff;
+    color: #e6edf3;
+    background: #1c2128;
+}
+
 /* Footer */
 .app-footer {
     border-top: 1px solid #21262d;
@@ -774,6 +820,8 @@ if 'active_genre' not in st.session_state:
     st.session_state.active_genre = list(genre_carousel.keys())[0]
 if 'search_query' not in st.session_state:
     st.session_state.search_query = ''
+if 'genre_pill_offset' not in st.session_state:
+    st.session_state.genre_pill_offset = 0
 
 def go_to_game(appid):
     st.session_state.selected_appid = int(appid)
@@ -866,8 +914,9 @@ if st.session_state.page == 'home':
             st.info("No results found. Try different keywords.")
 
     else:
-        # Design carousel for different genres
+        # ── Genre selector: pill navigator (left) + compact dropdown (right) ──
         genres = list(genre_carousel.keys())
+        PILLS_VISIBLE = 3  # how many pills show at once
 
         st.markdown("""
         <div class="section-header">
@@ -875,11 +924,45 @@ if st.session_state.page == 'home':
           <h2>Browse by Genre</h2>
         </div>""", unsafe_allow_html=True)
 
-        # Dropdown for different genre categories
-        col_g1, col_g2, col_g3 = st.columns([1, 2, 1])
-        with col_g2:
+        # Clamp offset
+        max_offset = max(0, len(genres) - PILLS_VISIBLE)
+        st.session_state.genre_pill_offset = max(0, min(st.session_state.genre_pill_offset, max_offset))
+        offset = st.session_state.genre_pill_offset
+        visible_genres = genres[offset: offset + PILLS_VISIBLE]
+
+        # Layout: [← btn] [pill1] [pill2] [pill3] [→ btn]  ···  [compact dropdown]
+        nav_cols = st.columns([0.4, 1, 1, 1, 0.4, 0.1, 1.4])
+
+        with nav_cols[0]:
+            if st.button("‹", key="genre_prev", help="Previous genres",
+                         disabled=(offset == 0)):
+                st.session_state.genre_pill_offset = max(0, offset - 1)
+                st.rerun()
+
+        for pill_i, g in enumerate(visible_genres):
+            with nav_cols[1 + pill_i]:
+                is_active = (g == st.session_state.active_genre)
+                btn_type = "primary" if is_active else "secondary"
+                if st.button(g, key=f"pill_{g}", type=btn_type, use_container_width=True):
+                    st.session_state.active_genre = g
+                    st.rerun()
+
+        # Fill remaining pill slots if fewer than PILLS_VISIBLE genres visible
+        for empty_i in range(PILLS_VISIBLE - len(visible_genres)):
+            with nav_cols[1 + len(visible_genres) + empty_i]:
+                st.empty()
+
+        with nav_cols[4]:
+            if st.button("›", key="genre_next", help="Next genres",
+                         disabled=(offset >= max_offset)):
+                st.session_state.genre_pill_offset = min(max_offset, offset + 1)
+                st.rerun()
+
+        # spacer col [5] intentionally empty
+
+        with nav_cols[6]:
             selected_genre = st.selectbox(
-                "Select a Genre",
+                "Genre",
                 options=genres,
                 index=genres.index(st.session_state.active_genre) if st.session_state.active_genre in genres else 0,
                 key="genre_select",
@@ -914,7 +997,6 @@ if st.session_state.page == 'home':
                           <div class="img-hover-overlay">
                             <div class="hov-title">{safe_name}</div>
                             <div class="hov-price">{price_disp}</div>
-                            <div class="hov-cta">▶ View Game</div>
                           </div>
                         </div>""", unsafe_allow_html=True)
                         st.markdown(f"""
@@ -954,7 +1036,6 @@ if st.session_state.page == 'home':
                   <div class="img-hover-overlay">
                     <div class="hov-title">{safe_name_tr}</div>
                     <div class="hov-price">{price_disp_tr}</div>
-                    <div class="hov-cta">▶ View Game</div>
                   </div>
                 </div>""", unsafe_allow_html=True)
                 st.markdown(f"""
@@ -1174,7 +1255,6 @@ elif st.session_state.page == 'detail':
                       <div class="img-hover-overlay">
                         <div class="hov-title">{safe_rec_name}</div>
                         <div class="hov-price">{price_disp_r}</div>
-                        <div class="hov-cta">▶ View Game</div>
                       </div>
                     </div>""", unsafe_allow_html=True)
                     st.markdown(f"""
