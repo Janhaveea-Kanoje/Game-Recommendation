@@ -251,6 +251,81 @@ html, body, [class*="css"] {
     color: #f0c27f;
 }
 
+/* ── Clickable thumbnail hover card ── */
+.thumb-wrap {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    display: block;
+    border: 2px solid transparent;
+    transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+}
+.thumb-wrap:hover {
+    border-color: #1f6feb;
+    transform: translateY(-4px);
+    box-shadow: 0 14px 40px rgba(31,111,235,0.30);
+}
+.thumb-wrap img {
+    width: 100%;
+    display: block;
+    aspect-ratio: 460/215;
+    object-fit: cover;
+    transition: filter 0.25s;
+}
+.thumb-wrap:hover img {
+    filter: brightness(0.35);
+}
+.thumb-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.25s;
+    padding: 10px;
+    text-align: center;
+}
+.thumb-wrap:hover .thumb-overlay {
+    opacity: 1;
+}
+.thumb-overlay-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e6edf3;
+    line-height: 1.3;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}
+.thumb-overlay-price {
+    font-size: 15px;
+    font-weight: 800;
+    color: #3fb950;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}
+.thumb-overlay-cta {
+    margin-top: 4px;
+    background: #1f6feb;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.4px;
+}
+/* Hide the Streamlit nav buttons used by JS click */
+.hidden-nav-btn > div > button {
+    display: none !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
 /* ── Detail page ── */
 .detail-hero {
     position: relative;
@@ -509,33 +584,7 @@ html, body, [class*="css"] {
 
 # Load Data and direct path
 from pathlib import Path
-import gdown
-
 DATA_DIR = Path(__file__).resolve().parent
-
-# ─── Google Drive File IDs ──────────────────────────────────────────────────────
-# Replace each value below with the actual file ID from your Google Drive share link
-# e.g. https://drive.google.com/file/d/THIS_PART_IS_THE_ID/view
-GDRIVE_FILE_IDS = {
-    "games_df.pkl":         "1yw-LWOqrQirhm2c0HFvqB8g4OH0J-kaO",
-    "sim_matrix.pkl":       "1AXtN1rwUmog_H33HBoH2eVAOl07XFVAX",
-    "tfidf_vectorizer.pkl": "10YponNB34uT2GYmtufXUlmjqtSB-O9qZ",
-    "appid_to_idx.pkl":     "1Jds3lizQxMxTpjOVWVpmDFYA5AM-MOos",
-    "genre_carousel.pkl":   "1HB40Cg9PncNwFzbkKsa1LIYIUOVbhtTh",
-}
-
-def download_data_files():
-    """Download pkl files from Google Drive if they are not present locally."""
-    for filename, file_id in GDRIVE_FILE_IDS.items():
-        filepath = DATA_DIR / filename
-        if not filepath.exists():
-            gdown.download(
-                f"https://drive.google.com/uc?id={file_id}",
-                str(filepath),
-                quiet=True
-            )
-
-download_data_files()
 
 @st.cache_resource(show_spinner="Loading Playing Arena engine...")
 def load_data():
@@ -568,16 +617,24 @@ def get_recommendations(appid, n=12):
     scores = list(enumerate(sim_matrix[idx]))
     scores = sorted(scores, key=lambda x: -float(x[1]))
     scores = [s for s in scores if s[0] != idx][:n]
+
+    # Rescale similarity scores so the best match shows ~92% instead of raw ~40%
+    # Raw TF-IDF cosine similarity rarely exceeds 0.5 between different games.
+    # We rescale: map [0, top_score] → [0, 0.92] so percentages are meaningful.
+    top_score = float(scores[0][1]) if scores else 1.0
+    scale = 0.92 / top_score if top_score > 0 else 1.0
+
     results = []
     for i, score in scores:
         row = df.iloc[i]
+        rescaled = min(float(score) * scale, 0.99)  # cap at 99%
         results.append({
             'appid': int(row['appid']),
             'name': row['name'],
             'header_image': row.get('header_image', ''),
             'genres': row.get('genres', ''),
             'price': row.get('price', 0),
-            'score': float(score),
+            'score': rescaled,
             'sentiment': row.get('sentiment_score', 0),
         })
     return results
@@ -779,18 +836,41 @@ if st.session_state.page == 'home':
                         genre_label = genres_g[0] if genres_g else active_genre
                         score = float(game.get('sentiment_score', 0))
                         label, _ = rating_label(score)
-                        st.image(img_url(game), use_container_width=True)
+                        price_disp = fmt_price(game.get('price', 0))
+                        appid_g = int(game['appid'])
+                        nav_label = f"__nav_{appid_g}__{row_start}_{col_idx}"
+                        safe_name = str(game['name']).replace('"', '&quot;').replace("'", "&#39;")
+
                         st.markdown(f"""
-                        <div style="margin-top:4px">
+                        <div class="thumb-wrap" onclick="
+                          var btns = window.parent.document.querySelectorAll('button');
+                          for(var b of btns){{
+                            if(b.innerText.trim() === '{nav_label}'){{b.click();break;}}
+                          }}
+                        ">
+                          <img src="{img_url(game)}" alt="{safe_name}"/>
+                          <div class="thumb-overlay">
+                            <div class="thumb-overlay-name">{safe_name}</div>
+                            <div class="thumb-overlay-price">{price_disp}</div>
+                            <div class="thumb-overlay-cta">&#9654; View Game</div>
+                          </div>
+                        </div>""", unsafe_allow_html=True)
+
+                        st.markdown(f"""
+                        <div style="margin-top:6px">
                           <div style="font-size:13px;font-weight:600;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{game['name']}</div>
                           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
                             <span style="font-size:11px;color:#58a6ff;background:rgba(88,166,255,0.1);padding:2px 8px;border-radius:10px">{genre_label}</span>
-                            <span style="font-size:12px;font-weight:700;color:#3fb950">{fmt_price(game.get('price',0))}</span>
+                            <span style="font-size:12px;font-weight:700;color:#3fb950">{price_disp}</span>
                           </div>
                           <div style="font-size:11px;color:#8b949e;margin-top:3px">⭐ {label}</div>
                         </div>""", unsafe_allow_html=True)
-                        if st.button("View Game", key=f"card_{game['appid']}", use_container_width=True):
-                            go_to_game(game['appid'])
+
+                        st.markdown('<div class="hidden-nav-btn">', unsafe_allow_html=True)
+                        if st.button(nav_label, key=f"card_{appid_g}_{row_start}_{col_idx}"):
+                            go_to_game(appid_g)
+                        st.markdown('</div>', unsafe_allow_html=True)
+
                 st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
         # Grid for top rated section
@@ -806,18 +886,40 @@ if st.session_state.page == 'home':
         for i, (_, game) in enumerate(top_rated.iterrows()):
             with tr_cols[i % 4]:
                 genres_g = get_genres(game)
-                genre_label = genres_g[0] if genres_g else ''
                 score = float(game.get('sentiment_score', 0))
                 lbl, clr = rating_label(score)
-                st.image(img_url(game), use_container_width=True)
+                price_disp = fmt_price(game.get('price', 0))
+                appid_tr = int(game['appid'])
+                nav_label_tr = f"__navtr_{appid_tr}__{i}"
+                safe_name_tr = str(game['name']).replace('"', '&quot;').replace("'", "&#39;")
+
+                st.markdown(f"""
+                <div class="thumb-wrap" onclick="
+                  var btns = window.parent.document.querySelectorAll('button');
+                  for(var b of btns){{
+                    if(b.innerText.trim() === '{nav_label_tr}'){{b.click();break;}}
+                  }}
+                ">
+                  <img src="{img_url(game)}" alt="{safe_name_tr}"/>
+                  <div class="thumb-overlay">
+                    <div class="thumb-overlay-name">{safe_name_tr}</div>
+                    <div class="thumb-overlay-price">{price_disp}</div>
+                    <div class="thumb-overlay-cta">&#9654; View Game</div>
+                  </div>
+                </div>""", unsafe_allow_html=True)
+
                 st.markdown(f"""
                 <div style="margin-top:4px">
                   <div style="font-size:13px;font-weight:600;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{game['name']}</div>
                   <div style="font-size:11px;color:{clr};margin-top:3px">★ {lbl}</div>
-                  <div style="font-size:12px;font-weight:700;color:#3fb950;margin-top:2px">{fmt_price(game.get('price',0))}</div>
+                  <div style="font-size:12px;font-weight:700;color:#3fb950;margin-top:2px">{price_disp}</div>
                 </div>""", unsafe_allow_html=True)
-                if st.button("View", key=f"tr_{game['appid']}", use_container_width=True):
-                    go_to_game(game['appid'])
+
+                st.markdown('<div class="hidden-nav-btn">', unsafe_allow_html=True)
+                if st.button(nav_label_tr, key=f"tr_{appid_tr}_{i}"):
+                    go_to_game(appid_tr)
+                st.markdown('</div>', unsafe_allow_html=True)
+
             if i == 3:
                 st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
