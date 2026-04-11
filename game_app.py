@@ -290,7 +290,7 @@ html, body, [class*="css"] {
     gap: 5px;
     opacity: 0;
     transition: opacity 0.25s;
-    pointer-events: none;   /* clicks pass through to parent div */
+    pointer-events: none;
     padding: 10px;
     text-align: center;
     background: rgba(13,17,23,0.15);
@@ -507,20 +507,6 @@ html, body, [class*="css"] {
     margin: 16px 0;
 }
 .back-btn:hover { color: #e6edf3; border-color: #30363d; }
-
-/* Hidden JS-trigger buttons — zero size, invisible */
-.hidden-nav-btn {
-    position: absolute !important;
-    width: 0 !important; height: 0 !important;
-    overflow: hidden !important; opacity: 0 !important;
-    pointer-events: none !important;
-}
-.hidden-nav-btn * {
-    display: none !important;
-    height: 0 !important; min-height: 0 !important;
-    padding: 0 !important; margin: 0 !important;
-    border: none !important; visibility: hidden !important;
-}
 
 /* Horizontal scroll carousel */
 .carousel-scroll {
@@ -1005,12 +991,8 @@ if st.session_state.page == 'home':
                         label, _ = rating_label(score)
                         safe_name = str(game['name']).replace('"','&quot;').replace("'","&#39;")
                         price_disp = fmt_price(game.get('price', 0))
-                        nav_lbl = f"__imgclick_card_{game['appid']}_{row_start}_{col_idx}__"
                         st.markdown(f"""
-                        <div class="img-hover-wrap" onclick="(function(){{
-                          var btns=window.parent.document.querySelectorAll('button');
-                          for(var b of btns){{if(b.innerText.trim()==='{nav_lbl}'){{b.click();break;}}}}
-                        }})()" style="cursor:pointer">
+                        <div class="img-hover-wrap">
                           <img src="{img_url(game)}" alt="{safe_name}"/>
                           <div class="img-hover-overlay">
                             <div class="hov-title">{safe_name}</div>
@@ -1026,10 +1008,6 @@ if st.session_state.page == 'home':
                           </div>
                           <div style="font-size:11px;color:#8b949e;margin-top:3px">⭐ {label}</div>
                         </div>""", unsafe_allow_html=True)
-                        st.markdown('<div class="hidden-nav-btn">', unsafe_allow_html=True)
-                        if st.button(nav_lbl, key=f"imgclick_card_{game['appid']}_{row_start}_{col_idx}"):
-                            go_to_game(game['appid'])
-                        st.markdown('</div>', unsafe_allow_html=True)
                         if st.button("View Game", key=f"card_{game['appid']}", use_container_width=True):
                             go_to_game(game['appid'])
                 st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
@@ -1052,12 +1030,8 @@ if st.session_state.page == 'home':
                 lbl, clr = rating_label(score)
                 safe_name_tr = str(game['name']).replace('"','&quot;').replace("'","&#39;")
                 price_disp_tr = fmt_price(game.get('price', 0))
-                nav_lbl_tr = f"__imgclick_tr_{game['appid']}_{i}__"
                 st.markdown(f"""
-                <div class="img-hover-wrap" onclick="(function(){{
-                  var btns=window.parent.document.querySelectorAll('button');
-                  for(var b of btns){{if(b.innerText.trim()==='{nav_lbl_tr}'){{b.click();break;}}}}
-                }})()" style="cursor:pointer">
+                <div class="img-hover-wrap">
                   <img src="{img_url(game)}" alt="{safe_name_tr}"/>
                   <div class="img-hover-overlay">
                     <div class="hov-title">{safe_name_tr}</div>
@@ -1070,10 +1044,6 @@ if st.session_state.page == 'home':
                   <div style="font-size:11px;color:{clr};margin-top:3px">★ {lbl}</div>
                   <div style="font-size:12px;font-weight:700;color:#3fb950;margin-top:2px">{price_disp_tr}</div>
                 </div>""", unsafe_allow_html=True)
-                st.markdown('<div class="hidden-nav-btn">', unsafe_allow_html=True)
-                if st.button(nav_lbl_tr, key=f"imgclick_tr_{game['appid']}_{i}"):
-                    go_to_game(game['appid'])
-                st.markdown('</div>', unsafe_allow_html=True)
                 if st.button("View", key=f"tr_{game['appid']}", use_container_width=True):
                     go_to_game(game['appid'])
             if i == 3:
@@ -1279,12 +1249,8 @@ elif st.session_state.page == 'detail':
                     rec_img = rec['header_image'] or f"https://steamcdn-a.akamaihd.net/steam/apps/{rec['appid']}/header.jpg"
                     safe_rec_name = str(rec['name']).replace('"','&quot;').replace("'","&#39;")
                     price_disp_r = fmt_price(rec['price'])
-                    nav_lbl_rec = f"__imgclick_rec_{rec['appid']}_{row_start}_{ci}__"
                     st.markdown(f"""
-                    <div class="img-hover-wrap" onclick="(function(){{
-                      var btns=window.parent.document.querySelectorAll('button');
-                      for(var b of btns){{if(b.innerText.trim()==='{nav_lbl_rec}'){{b.click();break;}}}}
-                    }})()" style="cursor:pointer">
+                    <div class="img-hover-wrap">
                       <img src="{rec_img}" alt="{safe_rec_name}"/>
                       <div class="img-hover-overlay">
                         <div class="hov-title">{safe_rec_name}</div>
@@ -1300,10 +1266,6 @@ elif st.session_state.page == 'detail':
                       </div>
                       <div style="font-size:12px;font-weight:700;color:#3fb950;margin-top:3px">{fmt_price(rec['price'])}</div>
                     </div>""", unsafe_allow_html=True)
-                    st.markdown('<div class="hidden-nav-btn">', unsafe_allow_html=True)
-                    if st.button(nav_lbl_rec, key=f"imgclick_rec_{rec['appid']}_{row_start}_{ci}"):
-                        go_to_game(rec['appid'])
-                    st.markdown('</div>', unsafe_allow_html=True)
                     if st.button("View →", key=f"rec_{rec['appid']}_{row_start}_{ci}", use_container_width=True):
                         go_to_game(rec['appid'])
             st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
