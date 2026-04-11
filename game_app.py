@@ -602,18 +602,67 @@ GDRIVE_FILE_IDS = {
 }
 
 def download_data_files():
-    """Download pkl files from Google Drive if they are not present locally."""
-    for filename, file_id in GDRIVE_FILE_IDS.items():
-        filepath = DATA_DIR / filename
-        if not filepath.exists():
-            st.info(f"⬇️ Downloading {filename} from Google Drive...")
-            gdown.download(
-                f"https://drive.google.com/uc?id={file_id}",
-                str(filepath),
-                quiet=False
-            )
+    """Download pkl files from Google Drive if not present. Shows a branded loading screen."""
+    files_needed = [f for f, _ in GDRIVE_FILE_IDS.items()
+                    if not (DATA_DIR / f).exists()]
+    if not files_needed:
+        return  # All files already present — skip entirely, no UI shown
 
-download_data_files()
+    # Show a full-page branded loading overlay instead of raw st.info banners
+    st.markdown("""
+    <style>
+    .pa-loading-screen {
+        position: fixed; inset: 0; z-index: 9999;
+        background: #0d1117;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 28px;
+    }
+    .pa-loading-logo {
+        font-size: 42px; font-weight: 800; letter-spacing: -1px;
+        background: linear-gradient(135deg, #1db954 0%, #00b4d8 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .pa-loading-sub {
+        font-size: 15px; color: #8b949e; margin-top: -18px;
+    }
+    .pa-loading-bar-bg {
+        width: 320px; height: 5px; background: #21262d;
+        border-radius: 4px; overflow: hidden;
+    }
+    @keyframes pa-bar-slide {
+        0%   { transform: translateX(-100%); }
+        100% { transform: translateX(320px); }
+    }
+    .pa-loading-bar-fill {
+        height: 100%; width: 160px;
+        background: linear-gradient(90deg, #1db954, #00b4d8);
+        border-radius: 4px;
+        animation: pa-bar-slide 1.4s ease-in-out infinite;
+    }
+    .pa-loading-note {
+        font-size: 12px; color: #484f58; max-width: 320px; text-align: center;
+    }
+    </style>
+    <div class="pa-loading-screen">
+      <div class="pa-loading-logo">🕹️ Playing Arena</div>
+      <div class="pa-loading-sub">Setting things up for the first time…</div>
+      <div class="pa-loading-bar-bg"><div class="pa-loading-bar-fill"></div></div>
+      <div class="pa-loading-note">Downloading game data — this only happens once and takes about a minute.</div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.stop()   # Pause rendering here; Streamlit will rerun after the download completes
+
+# Run downloads silently (no st.* calls) before the UI renders
+for filename, file_id in GDRIVE_FILE_IDS.items():
+    filepath = DATA_DIR / filename
+    if not filepath.exists():
+        gdown.download(
+            f"https://drive.google.com/uc?id={file_id}",
+            str(filepath),
+            quiet=True
+        )
+
+download_data_files()   # After silent download, this call will now find all files present and return immediately
 
 @st.cache_resource(show_spinner="Loading Playing Arena engine...")
 def load_data():
