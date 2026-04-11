@@ -517,11 +517,11 @@ DATA_DIR = Path(__file__).resolve().parent
 # Replace each value below with the actual file ID from your Google Drive share link
 # e.g. https://drive.google.com/file/d/THIS_PART_IS_THE_ID/view
 GDRIVE_FILE_IDS = {
-    "games_df.pkl":         "PASTE_YOUR_FILE_ID_HERE",
-    "sim_matrix.pkl":       "PASTE_YOUR_FILE_ID_HERE",
-    "tfidf_vectorizer.pkl": "PASTE_YOUR_FILE_ID_HERE",
-    "appid_to_idx.pkl":     "PASTE_YOUR_FILE_ID_HERE",
-    "genre_carousel.pkl":   "PASTE_YOUR_FILE_ID_HERE",
+    "games_df.pkl":         "1yw-LWOqrQirhm2c0HFvqB8g4OH0J-kaO",
+    "sim_matrix.pkl":       "1AXtN1rwUmog_H33HBoH2eVAOl07XFVAX",
+    "tfidf_vectorizer.pkl": "10YponNB34uT2GYmtufXUlmjqtSB-O9qZ",
+    "appid_to_idx.pkl":     "1Jds3lizQxMxTpjOVWVpmDFYA5AM-MOos",
+    "genre_carousel.pkl":   "1HB40Cg9PncNwFzbkKsa1LIYIUOVbhtTh",
 }
 
 def download_data_files():
