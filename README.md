@@ -142,16 +142,6 @@ gdown>=4.7.1
 
 ---
 
-## 🔮 Future Improvements
-
-- [ ] User accounts and personalised recommendation history
-- [ ] Collaborative filtering based on user behaviour
-- [ ] Live Steam API pricing integration
-- [ ] Mood-based and tempo filters
-- [ ] Mobile app (React Native)
-
----
-
 ## 👩‍💻 Student Details
 
 **Janhavee Kanoje**
