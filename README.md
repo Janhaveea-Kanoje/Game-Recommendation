@@ -1,26 +1,26 @@
 # 🎮 Playing Arena — Smart Game Recommendation System
 
-## 📌 Overview
+## Overview
 
 **Playing Arena** is a content-based game recommendation system built with Streamlit. It uses TF-IDF vectorisation and cosine similarity on Steam game descriptions, genres, and user tags to find games that are truly similar to what you like — not just what's trending.
 
-🔗 **Live App:** [playing-arena.streamlit.app](https://game-recommendation-6tfd7ykkgfbjmvdtmrjfk5.streamlit.app/)
+**Live App:** [playing-arena.streamlit.app](https://game-recommendation-6tfd7ykkgfbjmvdtmrjfk5.streamlit.app/)
 
 ---
 
-## ✨ Features
+## Features
 
-- 🔍 **Semantic Search** — Search by title, genre, tags, or describe what you want in plain English
-- 🎯 **AI Recommendations** — Get 12 similar games powered by TF-IDF + cosine similarity
-- 🎮 **Genre Browsing** — Horizontal scrollable genre pill strip + dropdown, both in sync
-- 🖼️ **Hover Cards** — Hover over any thumbnail to preview game name and price
-- 📄 **Game Detail Pages** — Full info including ratings, playtime, screenshots, system requirements
-- 🏆 **Top Rated Section** — Browse the highest-rated games on Steam
-- ⚡ **Fast Loading** — Precomputed similarity matrix for instant recommendations
+- **Semantic Search** — Search by title, genre, tags, or describe what you want in plain English
+- **AI Recommendations** — Get 12 similar games powered by TF-IDF + cosine similarity
+- **Genre Browsing** — Horizontal scrollable genre pill strip + dropdown, both in sync
+- **Hover Cards** — Hover over any thumbnail to preview game name and price
+- **Game Detail Pages** — Full info including ratings, playtime, screenshots, system requirements
+- **Top Rated Section** — Browse the highest-rated games on Steam
+- **Fast Loading** — Precomputed similarity matrix for instant recommendations
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -33,7 +33,7 @@
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 playing-arena/
@@ -52,7 +52,7 @@ playing-arena/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the repository
 
@@ -89,7 +89,7 @@ streamlit run app.py
 
 ---
 
-## 🧠 How the Recommendation Engine Works
+## How the Recommendation Engine Works
 
 ```
 Game Corpus (name + genres + tags + description)
@@ -111,7 +111,7 @@ Game Corpus (name + genres + tags + description)
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 ```
 streamlit>=1.32.0
@@ -123,18 +123,18 @@ gdown>=4.7.1
 
 ---
 
-## ☁️ Deployment on Streamlit Cloud
+## Deployment on Streamlit Cloud
 
 1. Push `app.py`, `requirements.txt`, and `.gitignore` to GitHub
 2. Go to [share.streamlit.io](https://share.streamlit.io) and connect your repo
 3. Set **Main file path** to `app.py`
 4. Click **Deploy**
 
-> ⚠️ The pkl files are downloaded automatically from Google Drive on first load (~3-5 mins). Subsequent loads are instant due to Streamlit caching.
+> The pkl files are downloaded automatically from Google Drive on first load (~3-5 mins). Subsequent loads are instant due to Streamlit caching.
 
 ---
 
-## 📊 Dataset
+## Dataset
 
 - **Source:** Steam Games Dataset (Kaggle / Steam Spy)
 - **Size:** 5,000 games
@@ -142,7 +142,7 @@ gdown>=4.7.1
 
 ---
 
-## 👩‍💻 Student Details
+## Student Details
 
 **Janhavee Kanoje**
 - Student ID: GH1033705
