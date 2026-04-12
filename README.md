@@ -155,6 +155,6 @@ gdown>=4.7.1
 ## 👩‍💻 Student Details
 
 **Janhavee Kanoje**
-Student ID: GH1033705
-Module: Business Project in Big Data & AI
-Gisma University of Applied Sciences
+- Student ID: GH1033705
+- Module: Business Project in Big Data & AI
+- Gisma University of Applied Sciences
